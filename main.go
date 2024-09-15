@@ -10,13 +10,15 @@ import (
 func main() {
 	out := os.Stdout
 	if !(len(os.Args) == 2 || len(os.Args) == 3) {
-		panic("usage go run main.go . [-f]")
+		fmt.Println("usage go run main.go . [-f]")
+		return
 	}
 	path := os.Args[1]
 	printFiles := len(os.Args) == 3 && os.Args[2] == "-f"
 	err := dirTree(out, path, printFiles)
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err)
+		return
 	}
 }
 
@@ -24,14 +26,23 @@ func dirTree(output io.Writer, thisPath string, showFiles bool) error {
 
 	os.Chdir(thisPath)
 	prefixStart := "├───"
-	printDir(prefixStart, showFiles, output)
+	err := printDir(prefixStart, showFiles, output)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 
 }
 
-func printDir(prefixStart string, showFiles bool, output io.Writer) {
-	dirList, _ := os.ReadDir(".")
+func printDir(prefixStart string, showFiles bool, output io.Writer) error {
+	dirList, err := os.ReadDir(".")
+
+	if err != nil {
+		return err
+	}
+
 	dirListFoldersOnly := make([]os.DirEntry, 0)
 	if !showFiles {
 		for j := range dirList {
@@ -72,7 +83,7 @@ func printDir(prefixStart string, showFiles bool, output io.Writer) {
 			}
 			printDir(prefix, showFiles, output)
 			os.Chdir("..")
-
 		}
 	}
+	return nil
 }
